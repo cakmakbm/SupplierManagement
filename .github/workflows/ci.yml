@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The projects target net8.0. The .slnx solution format needs SDK 9.0.200 or later,
+      # so SDK 9 builds the solution and the .NET 8 runtime runs the tests.
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+
+      - name: Restore
+        run: dotnet restore SupplierManagement.slnx
+
+      - name: Build
+        run: dotnet build SupplierManagement.slnx -c Release --no-restore
+
+      # Unit tests use in-memory SQLite and mocked Kafka clients, so no services are needed.
+      - name: Test
+        run: dotnet test SupplierManagement.slnx -c Release --no-build --logger trx --results-directory test-results
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+
+  docker-images:
+    name: Build Docker images
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Checks that both service images still build. Nothing is pushed.
+      - name: Build images
+        run: docker compose build product-service catalog-service

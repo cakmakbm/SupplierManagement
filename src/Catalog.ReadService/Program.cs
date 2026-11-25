@@ -15,6 +15,7 @@ try
     builder.Services.AddDbContext<CatalogDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("CatalogDb")));
     builder.Services.AddHostedService<DatabaseInitializer>();
+    builder.Services.AddSingleton<ProductCreatedMessageHandler>();
     builder.Services.AddHostedService<ProductCreatedConsumer>();
     builder.Services.AddHealthChecks().AddDbContextCheck<CatalogDbContext>();
 
@@ -26,5 +27,5 @@ try
     app.MapHealthChecks("/health");
     app.Run();
 }
-catch (Exception ex) { Log.Fatal(ex, "Catalog.ReadService terminated unexpectedly"); }
+catch (Exception ex) when (ex is not HostAbortedException) { Log.Fatal(ex, "Catalog.ReadService terminated unexpectedly"); }
 finally { await Log.CloseAndFlushAsync(); }

@@ -3,6 +3,7 @@ using Serilog;
 using Supplier.ProductService.Application.Abstractions;
 using Supplier.ProductService.Application.Products;
 using Supplier.ProductService.Infrastructure.Messaging;
+using Supplier.ProductService.Infrastructure.Outbox;
 using Supplier.ProductService.Infrastructure.Persistence;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
@@ -20,6 +21,8 @@ try
     builder.Services.AddScoped<CreateProductHandler>();
     builder.Services.AddSingleton<IProductEventPublisher, KafkaProductEventPublisher>();
     builder.Services.AddHostedService<DatabaseInitializer>();
+    builder.Services.AddScoped<OutboxDispatcher>();
+    builder.Services.AddHostedService<OutboxPublisherService>();
     builder.Services.AddHealthChecks().AddDbContextCheck<ProductDbContext>();
 
     var app = builder.Build();
@@ -30,8 +33,11 @@ try
     app.MapHealthChecks("/health");
     app.Run();
 }
-catch (Exception ex)
+catch (Exception ex) when (ex is not HostAbortedException)
 {
     Log.Fatal(ex, "ProductService terminated unexpectedly");
 }
 finally { await Log.CloseAndFlushAsync(); }
+
+// Lets WebApplicationFactory<Program> host the API in tests.
+public partial class Program;
