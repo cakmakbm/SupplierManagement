@@ -1,5 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+# Directory.Build.props sets TargetFramework; restore fails without it.
+COPY ["Directory.Build.props", "./"]
 COPY ["src/Shared.Contracts/Shared.Contracts.csproj", "src/Shared.Contracts/"]
 COPY ["src/Catalog.ReadService/Catalog.ReadService.csproj", "src/Catalog.ReadService/"]
 RUN dotnet restore "src/Catalog.ReadService/Catalog.ReadService.csproj"

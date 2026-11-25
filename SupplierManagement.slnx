@@ -2,4 +2,8 @@
   <Project Path="src/Shared.Contracts/Shared.Contracts.csproj" />
   <Project Path="src/Supplier.ProductService/Supplier.ProductService.csproj" />
   <Project Path="src/Catalog.ReadService/Catalog.ReadService.csproj" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Supplier.ProductService.Tests/Supplier.ProductService.Tests.csproj" />
+    <Project Path="tests/Catalog.ReadService.Tests/Catalog.ReadService.Tests.csproj" />
+  </Folder>
 </Solution>
